@@ -1,5 +1,6 @@
-#require 'selenium-webdriver'
+require 'selenium-webdriver'
 require 'csv'
+require 'uri'
 
 =begin
 class IndustryList
@@ -16,15 +17,13 @@ end
 =end
 
 class CompanyPage
-  
-  def initialize(:id, :url, :jobclass, :jobid)
-    @id, @companyurl, @companyjobclass, @companyjobid = :id, :url, :jobclass, :jobid
-  end
-  
-    SeleniumWorker.new(@companyurl, @companyjobclass, @companyjobid)
+  def initialize(id, url, jobclass, jobid)
+    @id = id
+    @page = SeleniumWorker.new(url, jobclass, jobid)     
   end
   
   def count
+    @page.count
   end
   
   def titles
@@ -40,15 +39,19 @@ class SeleniumWorker
     driver = Selenium::WebDriver.for :firefox
     driver.navigate.to url
     if jobclass.length > 0 && jobid.length > 0 then
-      @@element = driver.find_element(:class = jobclass, :id = jobid)
+      return driver.find_element(:class => jobclass, :id => jobid)
     elsif jobclass.length > 0 && jobid.length == 0 then
-      @@element = driver.find_element(:class = jobclass)
+      return driver.find_element(:class => jobclass)
     elsif jobclass.length == 0  && jobid.length > 0 then
-      @@element = driver.find_element(:id = jobid)
+      return driver.find_element(:id => jobid)
     end
     driver.quit
   end
   
 end
 
-company = CompanyPage.new('','','','222')
+p SeleniumWorker.new('http://500px.com/jobs', 'resumator-job-link resumator-jobs-text', '')
+
+
+
+#company = CompanyPage.new('http://500px.com/jobs','','resumator-job-link resumator-jobs-text','')
