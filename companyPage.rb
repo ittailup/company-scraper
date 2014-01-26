@@ -9,7 +9,7 @@ class IndustryList < Array
       @companies = []
       CSV.open(companies, 'r', col_sep: '"') do |csv|
         csv.each do |row|
-          p row[2]
+          # 0 = name, 1 = url, 2 = xpath
           @companies << [row[0], row[1], row[2]]
         end  
       end
