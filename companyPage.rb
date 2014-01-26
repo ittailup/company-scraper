@@ -2,31 +2,61 @@ require 'selenium-webdriver'
 require 'csv'
 require 'uri'
 
-=begin
+
 class IndustryList < Array
-  def initialize(companies)
-    # should point to csv
-    companies = []
-    CSV.open(companies, 'r') do |csv|
-      csv.each do |row|
-        CompanyPage.new(row[0], row[1], row[2], row[3])
+    def initialize(companies)
+    # should point to csv for loading
+      @companies = []
+      CSV.open(companies, 'r', col_sep: '"') do |csv|
+        csv.each do |row|
+          p row[2]
+          @companies << [row[0], row[1], row[2]]
+        end  
+      end
     end
-      @listcompanies = companies
-  end
+    
+    def to_csv
+      today = Date.today.strftime("%Y-%m-%d")
+      mainfile = 'results-%s.csv' % [today]
+      
+      CSV.open(mainfile, 'wb') do |listcsv|
+        @companies.each do |args|
+          @page = CompanyPage.new(args)
+          companyfile = 'results-%s-%s.csv' % [@page.name, today]
+          CSV.open(companyfile, 'wb') do |companycsv|
+            combined = []
+            @page.titles.each do |title|
+              combined << [title]
+            end
+            @page.listingurls.each_with_index do |url, index|
+              combined[index] << [url]
+            end
+            combined.each do |listingurl|
+              companycsv << listingurl
+            end
+          end
+          listcsv << [@page.name, @page.count]
+        end
+      end
+      @page.quit
+    end
+    
+            
 end
-=end
 
 
-class CompanyPage < Array 
-  attr_reader :url
-  def initialize(url, xpath)
-    @url = url
-    @page = SeleniumWorker.new(url, xpath)     
+class CompanyPage
+  attr_accessor :name, :url, :count, :titles, :listingsurls
+  def initialize(args)
+    @name = args[0]
+    @url = args[1]
+    @xpath = args[2]
+    @page = SeleniumWorker.new(args[1], args[2]) 
+    @count = @page.elements.count
+    @titles = self.titles
+    @listingurls = self.listingurls
   end
-  
-  def count
-    @page.elements.count
-  end
+
 
   def titles
     atext = []
@@ -36,7 +66,7 @@ class CompanyPage < Array
     return atext
   end
   
-  def urls
+  def listingurls
     urls = []
      @page.elements.each do |link|
        urls << link.attribute("href") unless link.attribute("href").nil?
@@ -73,10 +103,9 @@ class SeleniumWorker < Selenium::WebDriver::Driver
 end
   
 
-#data = SeleniumWorker.new("http://500px.com/jobs", "//a[contains(@class, 'resumator-hide-details')]").text 
-data = CompanyPage.new('http://youilabs.com/who-we-are/working-at-youi/','//div[contains(@class, "careertext")]//a')
+#data = CompanyPage.new("http://500px.com/jobs", "//a[contains(@class, 'resumator-hide-details')]").text 
+#data = CompanyPage.new('001', 'http://youilabs.com/who-we-are/working-at-youi/','//div[contains(@class, "careertext")]//a')
 
-p data.url
-
-data.quit
+data = IndustryList.new('startups.txt')
+data.to_csv
 #company = CompanyPage.new('http://500px.com/jobs','','resumator-job-link resumator-jobs-text','')
