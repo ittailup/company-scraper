@@ -1,0 +1,1 @@
+1	http://500px.com/jobs	//a[contains(@class, 'resumator-hide-details')]2	http://youilabs.com/who-we-are/working-at-youi/	//div[contains(@class, "careertext")]//div[contains(@class, "float_left")]//a
